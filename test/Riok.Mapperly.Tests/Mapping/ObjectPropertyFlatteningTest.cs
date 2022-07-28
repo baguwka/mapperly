@@ -238,4 +238,117 @@ public class ObjectPropertyFlatteningTest
 
     return target;".ReplaceLineEndings());
     }
+
+    [Fact]
+    public void AutoFlatteringMustNotBeAppliedIfThereWasMatchingPropertyNameInRootLevel()
+    {
+        var source = TestSourceBuilder.MapperWithBodyAndTypes(
+            @"
+partial TargetChild Map(SourceChild source);",
+            @"
+class SourceChild
+{
+    public SourceParent Parent { get; set; }
+    public string ParentId { get; set; }
+}",
+            @"
+class TargetChild
+{
+    public string ParentId { get; set; }
+}",
+            @"
+class SourceParent
+{
+    public string Id { get; set; }
+}");
+
+        var body = TestHelper.GenerateSingleMapperMethodBody(source, new TestHelperOptions
+        {
+            AllowedDiagnostics = new HashSet<DiagnosticSeverity>
+            {
+                DiagnosticSeverity.Info
+            }
+        });
+        body
+            .Should()
+            .Be(@"var target = new TargetChild();
+    target.ParentId = source.ParentId;
+    return target;".ReplaceLineEndings());
+    }
+
+    [Fact]
+    public void AutoFlatteringMustNotBeAppliedIfThereWasMatchingPropertyNameInRootLevelAndIgnoreIsUsed()
+    {
+        var source = TestSourceBuilder.MapperWithBodyAndTypes(
+            @"
+[MapIgnore(""Parent"")]
+partial TargetChild Map(SourceChild source);",
+            @"
+class SourceChild
+{
+    public SourceParent Parent { get; set; }
+    public string ParentId { get; set; }
+}",
+            @"
+class TargetChild
+{
+    public string ParentId { get; set; }
+}",
+            @"
+class SourceParent
+{
+    public string Id { get; set; }
+}");
+
+        var body = TestHelper.GenerateSingleMapperMethodBody(source, new TestHelperOptions
+        {
+            AllowedDiagnostics = new HashSet<DiagnosticSeverity>
+            {
+                DiagnosticSeverity.Info
+            }
+        });
+        body
+            .Should()
+            .Be(@"var target = new TargetChild();
+    target.ParentId = source.ParentId;
+    return target;".ReplaceLineEndings());
+    }
+
+    [Fact]
+    public void AutoFlatteringMustNotBeAppliedIfThereWasExplicitMapProperty()
+    {
+        var source = TestSourceBuilder.MapperWithBodyAndTypes(
+            @"
+[MapProperty(""ParentId"", ""ParentId"")]
+partial TargetChild Map(SourceChild source);",
+            @"
+class SourceChild
+{
+    public SourceParent Parent { get; set; }
+    public string ParentId { get; set; }
+}",
+            @"
+class TargetChild
+{
+    public string ParentId { get; set; }
+}",
+            @"
+class SourceParent
+{
+    public string Id { get; set; }
+}");
+
+        var body = TestHelper.GenerateSingleMapperMethodBody(source, new TestHelperOptions
+        {
+            AllowedDiagnostics = new HashSet<DiagnosticSeverity>
+            {
+                DiagnosticSeverity.Info
+            }
+        });
+        body
+            .Should()
+            .Be(@"var target = new TargetChild();
+    target.ParentId = source.ParentId;
+    return target;".ReplaceLineEndings());
+    }
 }
