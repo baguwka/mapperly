@@ -43,7 +43,7 @@ public static class TestHelper
         result.Diagnostics
             .FirstOrDefault(d => options.AllowedDiagnostics?.Contains(d.Severity) != true)
             .Should()
-            .BeNull();
+            .BeNull($"there was diagnostics issues listed below. Define your custom set of severities to ignore in {nameof(options)}.{nameof(options.AllowedDiagnostics)}. Expected to have no diagnostic issues");
 
         var mapperClassImpl = result.GeneratedTrees.Single()
             .GetRoot() // compilation
